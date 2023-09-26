@@ -21,61 +21,48 @@ import (
 const (
 	// AsyncWriteBack writes the object asynchronously to the backend.
 	AsyncWriteBack = iota
+
 	// WriteBack writes the object synchronously to the backend.
 	WriteBack
 
-	// Dragonfly Service defalut port of listening.
-	DefaultObjectStorageStartPort = 650004
+	// Ephemeral only writes the object to the dfdaemon.
+	// It is only provided for creating temporary objects between peers,
+	// and users are not allowed to use this mode.
+	Ephemeral
+)
 
-	// CopyOperation is the operation of copying object.
-	CopyOperation = "copy"
-
+const (
 	// HeaderDragonflyObjectMetaLastModifiedTime is used for last modified time of object storage.
 	HeaderDragonflyObjectMetaLastModifiedTime = "X-Dragonfly-Object-Meta-Last-Modified-Time"
+
 	// HeaderDragonflyObjectMetaStorageClass is used for storage class of object storage.
 	HeaderDragonflyObjectMetaStorageClass = "X-Dragonfly-Object-Meta-Storage-Class"
+
 	// HeaderDragonflyObjectOperation is used for object storage operation.
 	HeaderDragonflyObjectOperation = "X-Dragonfly-Object-Operation"
+)
 
+const (
 	// Upper limit of maxGetObjectMetadatas.
 	MaxGetObjectMetadatasLimit = 1000
+
 	// Upper limit of maxReplicas.
 	MaxReplicasLimit = 100
 )
 
+const (
+	// CopyOperation is the operation of copying object.
+	CopyOperation = "copy"
+)
+
 // defaultDragonflyEndpoint is the default endpoint to connect to a local dragonfly.
-var defaultDragonflyEndpoint = fmt.Sprintf("http://127.0.0.1:%d", DefaultObjectStorageStartPort)
-
-type dragonfly struct {
-	DefaultObjectStorage
-
-	// Address of the object storage service.
-	Endpoint string `yaml:"endpoint,omitempty" mapstructure:"endpoint,omitempty"`
-
-	// Filter is used to generate a unique Task ID by
-	// filtering unnecessary query params in the URL,
-	// it is separated by & character.
-	Filter string `yaml:"filter,omitempty" mapstructure:"filter,omitempty"`
-
-	// Mode is the mode in which the backend is written,
-	// including WriteBack and AsyncWriteBack.
-	Mode int `yaml:"mode,omitempty" mapstructure:"mode,omitempty"`
-
-	// MaxReplicas is the maximum number of
-	// replicas of an object cache in seed peers.
-	MaxReplicas int `yaml:"maxReplicas,omitempty" mapstructure:"mode,maxReplicas"`
-
-	// ObjectStorage bucket name.
-	bucket string
-
-	// http client.
-	client *http.Client
-}
+var defaultDragonflyEndpoint = fmt.Sprintf("http://127.0.0.1:%d", 650004)
 
 type ObjectMetadatas struct {
 	// CommonPrefixes are similar prefixes in object storage.
 	CommonPrefixes []string `json:"CommonPrefixes"`
 
+	// Metadatas are object metadata.
 	Metadatas []*ObjectMetadata `json:"Metadatas"`
 }
 
@@ -111,10 +98,39 @@ type ObjectMetadata struct {
 	StorageClass string
 }
 
+type dragonfly struct {
+	// DefaultObjectStorage is the default object storage.
+	DefaultObjectStorage
+
+	// Address of the object storage service.
+	Endpoint string
+
+	// Filter is used to generate a unique Task ID by
+	// filtering unnecessary query params in the URL,
+	// it is separated by & character.
+	Filter string
+
+	// Mode is the mode in which the backend is written,
+	// including WriteBack and AsyncWriteBack.
+	Mode int
+
+	// MaxReplicas is the maximum number of
+	// replicas of an object cache in seed peers.
+	MaxReplicas int
+
+	// ObjectStorage bucket name.
+	bucket string
+
+	// http client.
+	client *http.Client
+}
+
+// String returns the string representation of the dragonfly.
 func (d *dragonfly) String() string {
 	return fmt.Sprintf("dragonfly://%s/", d.bucket)
 }
 
+// Create creates the object if it does not exist.
 func (d *dragonfly) Create() error {
 	if _, err := d.List("", "", "", 1, false); err == nil {
 		return nil
@@ -151,6 +167,7 @@ func (d *dragonfly) Create() error {
 	return nil
 }
 
+// Head returns the object metadata if it exists.
 func (d *dragonfly) Head(key string) (Object, error) {
 	// get get object metadata request.
 	u, err := url.Parse(d.Endpoint)
@@ -202,6 +219,7 @@ func (d *dragonfly) Head(key string) (Object, error) {
 	}, nil
 }
 
+// Get returns the object if it exists.
 func (d *dragonfly) Get(key string, off, limit int64) (io.ReadCloser, error) {
 	// get get object request.
 	u, err := url.Parse(d.Endpoint)
@@ -235,9 +253,9 @@ func (d *dragonfly) Get(key string, off, limit int64) (io.ReadCloser, error) {
 	}
 
 	return resp.Body, nil
-
 }
 
+// Put creates or replaces the object.
 func (d *dragonfly) Put(key string, data io.Reader) error {
 	// get put object request.
 	body := &bytes.Buffer{}
@@ -304,6 +322,7 @@ func (d *dragonfly) Put(key string, data io.Reader) error {
 	return nil
 }
 
+// Copy copies the object if it exists.
 func (d *dragonfly) Copy(dst, src string) error {
 	// get copy object request.
 	body := &bytes.Buffer{}
@@ -350,6 +369,7 @@ func (d *dragonfly) Copy(dst, src string) error {
 	return nil
 }
 
+// Delete deletes the object if it exists.
 func (d *dragonfly) Delete(key string) error {
 	// get delete object request.
 	u, err := url.Parse(d.Endpoint)
@@ -382,6 +402,7 @@ func (d *dragonfly) Delete(key string) error {
 	return nil
 }
 
+// List lists the objects with the given prefix.
 func (d *dragonfly) List(prefix, marker, delimiter string, limit int64, followLink bool) ([]Object, error) {
 	if limit > MaxGetObjectMetadatasLimit {
 		limit = MaxGetObjectMetadatasLimit
@@ -455,36 +476,7 @@ func (d *dragonfly) List(prefix, marker, delimiter string, limit int64, followLi
 	return objs, err
 }
 
-func (d *dragonfly) ListAll(prefix, marker string, followLink bool) (<-chan Object, error) {
-	return nil, notSupported
-}
-
-// Not provided by Dragonfly yet.
-func (d *dragonfly) SetStorageClass(sc string) {}
-
-func (d *dragonfly) CreateMultipartUpload(key string) (*MultipartUpload, error) {
-	return nil, notSupported
-}
-
-func (d *dragonfly) UploadPart(key string, uploadID string, num int, data []byte) (*Part, error) {
-	return nil, notSupported
-}
-
-func (d *dragonfly) UploadPartCopy(key string, uploadID string, num int, srcKey string, off, size int64) (*Part, error) {
-	return nil, notSupported
-}
-
-func (d *dragonfly) AbortUpload(key string, uploadID string) {
-}
-
-func (d *dragonfly) CompleteUpload(key string, uploadID string, parts []*Part) error {
-	return notSupported
-}
-
-func (d *dragonfly) ListUploads(marker string) ([]*PendingPart, string, error) {
-	return nil, "", notSupported
-}
-
+// newDragonfly creates a new dragonfly object storage.
 func newDragonfly(_endpoint, _accessKey, _secretKey, _token string) (ObjectStorage, error) {
 	// Get endpoint from environment variable.
 	endpoint, exists := os.LookupEnv("DRAGONFLY_ENDPOINT")
@@ -538,6 +530,7 @@ func newDragonfly(_endpoint, _accessKey, _secretKey, _token string) (ObjectStora
 	}, nil
 }
 
+// init registers the dragonfly object storage.
 func init() {
 	Register("dragonfly", newDragonfly)
 }
