@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -158,11 +159,35 @@ func (d *dragonfly) Create() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		logger.Info((*(*(*(*(*resp).Body.(data)).body.(data)).src.(data)).R.(data)).buf)
+		printStruct(resp, " ")
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
 	return nil
+}
+
+func printStruct(v interface{}, indent string) {
+	val := reflect.ValueOf(v)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	if val.Kind() != reflect.Struct {
+		return
+	}
+
+	t := val.Type()
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		fieldType := t.Field(i)
+
+		if field.Kind() == reflect.Ptr && !field.IsNil() {
+			logger.Infof("%v%v (%v):\n", indent, fieldType.Name, fieldType.Type)
+			printStruct(field.Interface(), indent+"  ")
+		} else {
+			logger.Infof("%v%v (%v): %v\n", indent, fieldType.Name, fieldType.Type, field.Interface())
+		}
+	}
 }
 
 // Head returns the object metadata if it exists.
