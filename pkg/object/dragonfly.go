@@ -183,10 +183,13 @@ func printStruct(v interface{}, indent string) {
 
 		if field.Kind() == reflect.Ptr && !field.IsNil() {
 			logger.Infof("%v%v (%v):\n", indent, fieldType.Name, fieldType.Type)
-			printStruct(field.Interface(), indent+"  ")
+			if fieldType.Type.Field(i).PkgPath == "" { // Check if the field is exported
+				printStruct(field.Interface(), indent+"  ")
+			}
 		} else {
 			logger.Infof("%v%v (%v): %v\n", indent, fieldType.Name, fieldType.Type, field.Interface())
 		}
+
 	}
 }
 
