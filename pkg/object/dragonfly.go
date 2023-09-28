@@ -128,6 +128,23 @@ func (d *dragonfly) String() string {
 	return fmt.Sprintf("dragonfly://%s/", d.bucket)
 }
 
+
+// type Response struct {
+//     Body BodyType
+// }
+type BodyType struct {
+    Data DataType
+}
+type DataType struct {
+    Src SrcType
+}
+type SrcType struct {
+    R RType
+}
+type RType struct {
+    Buf string
+}
+
 // Create creates the object if it does not exist.
 func (d *dragonfly) Create() error {
 	if _, err := d.List("", "", "", 1, false); err == nil {
@@ -159,7 +176,7 @@ func (d *dragonfly) Create() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		printStruct(resp, " ")
+		logger.Infof((*(*(*(*(*resp.Body).(BodyType).Data).(DataType).Src).(SrcType).R).(RType).Buf.(string))
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
