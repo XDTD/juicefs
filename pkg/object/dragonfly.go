@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -163,19 +164,42 @@ func (d *dragonfly) Create() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		printError(resp.Body)
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("Failed to read response body: %v\n", err)
+		}
+		logger.Infof("%v", string(bodyBytes))
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
 	return nil
 }
 
-func printError(Body io.ReadCloser) {
-	bodyBytes, err := ioutil.ReadAll(Body)
-	if err != nil {
-		logger.Infof("Failed to read response body: %v\n", err)
+func printStruct(v interface{}, indent string) {
+	val := reflect.ValueOf(v)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
 	}
-	logger.Infof("%v", string(bodyBytes))
+
+	if val.Kind() != reflect.Struct {
+		return
+	}
+
+	t := val.Type()
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		fieldType := t.Field(i)
+
+		if field.Kind() == reflect.Ptr && !field.IsNil() {
+			logger.Infof("%v%v (%v):\n", indent, fieldType.Name, fieldType.Type)
+			if fieldType.Type.Field(i).PkgPath == "" { // Check if the field is exported
+				printStruct(field.Interface(), indent+"  ")
+			}
+		} else {
+			logger.Infof("%v%v (%v): %v\n", indent, fieldType.Name, fieldType.Type, field.Interface())
+		}
+
+	}
 }
 
 // Head returns the object metadata if it exists.
@@ -208,7 +232,7 @@ func (d *dragonfly) Head(key string) (Object, error) {
 		if resp.StatusCode == http.StatusNotFound {
 			err = os.ErrNotExist
 		}
-		printError(resp.Body)
+
 		return nil, err
 	}
 
@@ -261,7 +285,6 @@ func (d *dragonfly) Get(key string, off, limit int64) (io.ReadCloser, error) {
 	}
 
 	if resp.StatusCode/100 != 2 {
-		printError(resp.Body)
 		return nil, fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -329,7 +352,6 @@ func (d *dragonfly) Put(key string, data io.Reader) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		printError(resp.Body)
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -377,7 +399,6 @@ func (d *dragonfly) Copy(dst, src string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		printError(resp.Body)
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -411,7 +432,6 @@ func (d *dragonfly) Delete(key string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		printError(resp.Body)
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -463,7 +483,6 @@ func (d *dragonfly) List(prefix, marker, delimiter string, limit int64, followLi
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		printError(resp.Body)
 		return nil, fmt.Errorf("bad response status %s", resp.Status)
 	}
 
