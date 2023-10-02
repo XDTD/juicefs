@@ -177,6 +177,7 @@ func (bc *benchCase) run(test string) float64 {
 		fn = bc.statFiles
 	} // default: fatal
 	var wg sync.WaitGroup
+	time.Sleep(time.Second * 120)
 	start := time.Now()
 	for i := 0; i < bc.bm.threads; i++ {
 		index := i
