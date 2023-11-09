@@ -158,13 +158,6 @@ func (d *dragonfly) Create() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			logger.Infoln(err)
-		}
-		if body != nil && len(body) > 0 {
-			logger.Infoln(string(body))
-		}
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -200,13 +193,6 @@ func (d *dragonfly) Head(key string) (Object, error) {
 	if resp.StatusCode/100 != 2 {
 		if resp.StatusCode == http.StatusNotFound {
 			err = os.ErrNotExist
-		}
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			logger.Infoln(err)
-		}
-		if body != nil && len(body) > 0 {
-			logger.Infoln(string(body))
 		}
 
 		return nil, err
@@ -265,13 +251,6 @@ func (d *dragonfly) Get(key string, off, limit int64) (io.ReadCloser, error) {
 	}
 
 	if resp.StatusCode/100 != 2 {
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			logger.Infoln(err)
-		}
-		if body != nil && len(body) > 0 {
-			logger.Infoln(string(body))
-		}
 		return nil, fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -339,13 +318,6 @@ func (d *dragonfly) Put(key string, data io.Reader) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			logger.Infoln(err)
-		}
-		if body != nil && len(body) > 0 {
-			logger.Infoln(string(body))
-		}
 
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
@@ -394,13 +366,6 @@ func (d *dragonfly) Copy(dst, src string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			logger.Infoln(err)
-		}
-		if body != nil && len(body) > 0 {
-			logger.Infoln(string(body))
-		}
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -434,13 +399,6 @@ func (d *dragonfly) Delete(key string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			logger.Infoln(err)
-		}
-		if body != nil && len(body) > 0 {
-			logger.Infoln(string(body))
-		}
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -492,13 +450,6 @@ func (d *dragonfly) List(prefix, marker, delimiter string, limit int64, followLi
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			logger.Infoln(err)
-		}
-		if body != nil && len(body) > 0 {
-			logger.Infoln(string(body))
-		}
 		return nil, fmt.Errorf("bad response status %s", resp.Status)
 	}
 
