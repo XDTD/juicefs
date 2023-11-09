@@ -162,7 +162,9 @@ func (d *dragonfly) Create() error {
 		if err != nil {
 			logger.Fatal(err)
 		}
-		logger.Infoln(string(body))
+		if body != nil && len(body) > 0 {
+			logger.Infoln(string(body))
+		}
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -203,7 +205,7 @@ func (d *dragonfly) Head(key string) (Object, error) {
 		if err != nil {
 			logger.Fatal(err)
 		}
-		if len(body) > 0 {
+		if body != nil && len(body) > 0 {
 			logger.Infoln(string(body))
 		}
 
@@ -267,7 +269,9 @@ func (d *dragonfly) Get(key string, off, limit int64) (io.ReadCloser, error) {
 		if err != nil {
 			logger.Fatal(err)
 		}
-		logger.Infoln(string(body))
+		if body != nil && len(body) > 0 {
+			logger.Infoln(string(body))
+		}
 		return nil, fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -339,7 +343,10 @@ func (d *dragonfly) Put(key string, data io.Reader) error {
 		if err != nil {
 			logger.Fatal(err)
 		}
-		logger.Infoln(string(body))
+		if body != nil && len(body) > 0 {
+			logger.Infoln(string(body))
+		}
+
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -391,7 +398,9 @@ func (d *dragonfly) Copy(dst, src string) error {
 		if err != nil {
 			logger.Fatal(err)
 		}
-		logger.Infoln(string(body))
+		if body != nil && len(body) > 0 {
+			logger.Infoln(string(body))
+		}
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -429,7 +438,9 @@ func (d *dragonfly) Delete(key string) error {
 		if err != nil {
 			logger.Fatal(err)
 		}
-		logger.Infoln(string(body))
+		if body != nil && len(body) > 0 {
+			logger.Infoln(string(body))
+		}
 		return fmt.Errorf("bad response status %s", resp.Status)
 	}
 
@@ -485,7 +496,9 @@ func (d *dragonfly) List(prefix, marker, delimiter string, limit int64, followLi
 		if err != nil {
 			logger.Fatal(err)
 		}
-		logger.Infoln(string(body))
+		if body != nil && len(body) > 0 {
+			logger.Infoln(string(body))
+		}
 		return nil, fmt.Errorf("bad response status %s", resp.Status)
 	}
 
