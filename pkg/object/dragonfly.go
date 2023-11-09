@@ -160,7 +160,7 @@ func (d *dragonfly) Create() error {
 	if resp.StatusCode/100 != 2 {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Infoln(err)
 		}
 		if body != nil && len(body) > 0 {
 			logger.Infoln(string(body))
@@ -203,7 +203,7 @@ func (d *dragonfly) Head(key string) (Object, error) {
 		}
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Infoln(err)
 		}
 		if body != nil && len(body) > 0 {
 			logger.Infoln(string(body))
@@ -267,7 +267,7 @@ func (d *dragonfly) Get(key string, off, limit int64) (io.ReadCloser, error) {
 	if resp.StatusCode/100 != 2 {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Infoln(err)
 		}
 		if body != nil && len(body) > 0 {
 			logger.Infoln(string(body))
@@ -341,7 +341,7 @@ func (d *dragonfly) Put(key string, data io.Reader) error {
 	if resp.StatusCode/100 != 2 {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Infoln(err)
 		}
 		if body != nil && len(body) > 0 {
 			logger.Infoln(string(body))
@@ -396,7 +396,7 @@ func (d *dragonfly) Copy(dst, src string) error {
 	if resp.StatusCode/100 != 2 {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Infoln(err)
 		}
 		if body != nil && len(body) > 0 {
 			logger.Infoln(string(body))
@@ -436,7 +436,7 @@ func (d *dragonfly) Delete(key string) error {
 	if resp.StatusCode/100 != 2 {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Infoln(err)
 		}
 		if body != nil && len(body) > 0 {
 			logger.Infoln(string(body))
@@ -494,7 +494,7 @@ func (d *dragonfly) List(prefix, marker, delimiter string, limit int64, followLi
 	if resp.StatusCode/100 != 2 {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Infoln(err)
 		}
 		if body != nil && len(body) > 0 {
 			logger.Infoln(string(body))
