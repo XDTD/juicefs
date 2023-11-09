@@ -203,8 +203,8 @@ func (d *dragonfly) Head(key string) (Object, error) {
 		if err != nil {
 			logger.Fatal(err)
 		}
-		if body != nil {
-			logger.Infoln(body)
+		if len(body) > 0 {
+			logger.Infoln(string(body))
 		}
 
 		return nil, err
